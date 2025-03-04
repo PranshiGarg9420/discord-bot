@@ -1,3 +1,4 @@
+
 import discord
 import google.generativeai as genai
 import os
@@ -14,11 +15,11 @@ if not DISCORD_BOT_TOKEN:
     print("❌ ERROR: DISCORD_BOT_TOKEN is missing!")
     exit()
 
-# ✅ Correct way to configure Gemini API
+# Set API key directly on genai
 genai.configure(api_key=GEMINI_API_KEY)
 
-# ✅ FIXED: Use latest method to initialize the model
-model = genai.models.get("gemini-pro")  # ✅ Corrected
+# Initialize the model
+model = genai.GenerativeModel("gemini-pro")
 
 # Set up Discord bot with necessary intents
 intents = discord.Intents.default()
