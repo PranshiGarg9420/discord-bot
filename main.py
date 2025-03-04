@@ -1,6 +1,7 @@
 import discord
 import google.generativeai as genai
 import os
+from discord.ext import commands
 
 # Load API keys from Replit Secrets
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -8,49 +9,39 @@ DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 # Ensure API Keys Exist
 if not GEMINI_API_KEY:
-    print("❌ ERROR: GEMINI_API_KEY is missing!")
+    print("💔 ERROR: GEMINI_API_KEY is missing!")
     exit()
 if not DISCORD_BOT_TOKEN:
-    print("❌ ERROR: DISCORD_BOT_TOKEN is missing!")
+    print("💔 ERROR: DISCORD_BOT_TOKEN is missing!")
     exit()
 
-# Set API key directly on genai
+# Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
-
-# Initialize the model
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Set up Discord bot with necessary intents
 intents = discord.Intents.default()
-intents.message_content = True  # Required for reading messages
-client = discord.Client(intents=intents)
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'✅ Bot is online as {client.user}')
+    print(f'🎉 Bot is online as {bot.user}')
 
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
+@bot.command()
+async def chat(ctx, *, user_input: str):
+    if not user_input:
+        await ctx.send("🐥 Please provide a message to chat with AI.")
         return
-
-    if message.content.startswith("!chat"):
-        user_input = message.content[6:].strip()  # Extract user message
-        if not user_input:
-            await message.channel.send(
-                "⚠️ Please provide a message to chat with AI.")
-            return
-
-        try:
-            response = model.generate_content(user_input)  # Get AI response
-            await message.channel.send(response.text)  # Send AI response
-        except Exception as e:
-            await message.channel.send(
-                "❌ Error generating response. Try again later.")
-            print(f"Error: {e}")
+    try:
+        response = model.generate_content(user_input)
+        await ctx.send(response.text)
+    except Exception as e:
+        await ctx.send("💔 Error generating response. Try again later.")
+        print(f"Error: {e}")
 
 
 # Run the bot
-client.run(DISCORD_BOT_TOKEN)
+bot.run(DISCORD_BOT_TOKEN)
